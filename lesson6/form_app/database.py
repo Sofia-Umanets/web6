@@ -11,7 +11,7 @@ from datetime import date
 load_dotenv()
 
 DB_CONFIG = {
-    #'host': os.getenv('MYSQL_HOST', 'db'),
+    'host': os.getenv('MYSQL_HOST', 'db'),
     'database': os.getenv('DB_NAME'),
     'user': os.getenv('DB_USERNAME'),
     'password': os.getenv('DB_PASSWORD'),
