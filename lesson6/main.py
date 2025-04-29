@@ -5,7 +5,7 @@ from form_app.database import hash_password
 
 
 def main():
-    host = "localhost"
+    host = "0.0.0.0"
     port = 8080
 
     httpd = HTTPServer((host, port), HTTPHandler)
