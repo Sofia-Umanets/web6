@@ -60,8 +60,6 @@ def get_urlencoded_data(request: Request, rfile) -> dict:
     return query
 
 class HTTPHandler(BaseHTTPRequestHandler):
-    # routes["GET"] = [ (pattern, handler), … ]
-    # routes["POST"] = [ (pattern, handler), … ]
     routes = {"GET": [], "POST": []}
 
     @property
@@ -71,15 +69,12 @@ class HTTPHandler(BaseHTTPRequestHandler):
         return Request(headers=headers, cookies=cookies)
 
     def resp(self, response: Response):
-        # статус + обычные заголовки
         self.send_response(response.status)
         for k, v in response.headers.items():
             self.send_header(k, v)
-        # cookies
         for morsel in response.cookies.values():
             self.send_header("Set-Cookie", morsel.OutputString())
         self.end_headers()
-        # тело
         if response.content:
             body = (
                 response.content.encode()
@@ -117,24 +112,31 @@ class HTTPHandler(BaseHTTPRequestHandler):
         return decorator
 
     def serve_static(self):
-        """Отдаём /static/... из папки form_app/static/..."""
-        rel = self.path.lstrip("/")
-        full = os.path.join("form_app", rel)
-        if not os.path.isfile(full):
-            self.send_error(404, explain="File not found")
+        static_dir = "/app/lesson6/form_app/static"
+        
+        relative_path = os.path.relpath(self.path, '/static/')
+        
+        file_path = os.path.join(static_dir, relative_path)
+        
+        if not os.path.isfile(file_path):
+            self.send_error(404, explain=f"File not found: {file_path}")
             return
+
         try:
-            with open(full, "rb") as f:
-                data = f.read()
-            ctype, _ = mimetypes.guess_type(full)
+            with open(file_path, 'rb') as f:
+                content = f.read()
+            
+            content_type, _ = mimetypes.guess_type(file_path)
+            
             self.send_response(200)
-            self.send_header("Content-Type", ctype or "application/octet-stream")
-            self.send_header("Content-Length", str(len(data)))
+            self.send_header('Content-Type', content_type or 'application/octet-stream')
+            self.send_header('Content-Length', str(len(content)))
             self.end_headers()
-            self.wfile.write(data)
+            self.wfile.write(content)
+
         except PermissionError:
             self.send_error(403, explain="Access denied")
-        except Exception:
+        except IOError:
             self.send_error(500, explain="Error reading file")
 
     def do_GET(self):
